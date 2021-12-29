@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
-from R02 import R02
-from lrt_SED_model import lrt_SED_model as SED_model
+from AGN_Selection.R02 import R02
+from SEDs.lrt_SED_model import lrt_SED_model as SED_model
 from Lhost_Lagn_max import Lhost_Lagn_max
 
 #Create the SED model. We will be evaluating the SEDs at wavelength lam.

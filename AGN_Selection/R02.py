@@ -1,6 +1,6 @@
 import numpy as np
 
-from selection_criteria_class import SelectionCriteria
+from .selection_criteria_class import SelectionCriteria
 
 #Extremely simplified version of the SDSS selection criteria for low-z quasars by Richards et al. (2002).
 class R02(SelectionCriteria):
