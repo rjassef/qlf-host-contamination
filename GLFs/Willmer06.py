@@ -1,5 +1,5 @@
 import numpy as np
-from schechterFunction import SchechterFunction
+from .schechterFunction import SchechterFunction
 import astropy.units as u
 from scipy.interpolate import interp1d
 
