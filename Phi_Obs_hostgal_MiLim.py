@@ -3,7 +3,7 @@ import astropy.units as u
 from astropy.constants import L_sun
 from scipy.interpolate import interp1d
 
-from Lhost_Lagn_max import Lhost_Lagn_max
+from util.Lhost_Lagn_max import Lhost_Lagn_max
 
 """
 This version of the script matches what is done in the Shen20 pubtools, and gives very similar results. However, I think this is actually something I don't follow in their implementation in how Lx is calculated for f(NH; Lx, z).
@@ -57,7 +57,7 @@ def jacobian(Lfrac, Lstar_10, qlf):
 
 
 
-def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filter, lLfrac_min_lim=None):
+def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filter, SED_Model, sel_crit, glf, lLfrac_min_lim=None):
 
     """
     This is the main function of this module. For a given redshift, it returns the observed qlf at a given observed wavelength equal to the effective wavelength of the filter used / (1+z).
@@ -133,6 +133,11 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
     ltheta = 10.**(lNH-22) * ltheta_fact
     ltheta_2D = np.tile(ltheta, [len(lLfrac_lam_obs_grid), 1])
 
+    #Calculate the maximum host luminosity we can tolerate for each value of the reddening being considered. 
+    Lh_La_max = np.zeros(lNH.shape)
+    for k,ebv in enumerate(ltheta):
+        Lh_La_max[k] = Lhost_Lagn_max(agn, ebv, sel_crit)
+
     #For each NH, we will need to evaluate the unreddened QLF at a luminosity of lLfrac_lam_obs_grid + ltheta. So let's build it as a 2D array in which each row has the same lLfrac_lam_obs_grid value modified by the reddening correction (i.e., unreddened assuming different levels of obscuration).
     lLfrac_lam_sig_eval_2D = np.tile(lLfrac_lam_obs_grid, [len(lNH), 1]).T + ltheta_2D
 
@@ -144,7 +149,7 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
     #Extrapolate phi_lam_sig so that we can evaluate it in the new positions.
     log_phi_lam_sig_interp = interp1d(lLfrac_lam_sig, np.log10(phi_lam_sig.value+1e-32), kind='linear', fill_value = 'extrapolate')
 
-    #Evaluate it an produce phi_lam_obs_grid by integrating over f_NH dlNH.
+    #Evaluate it and produce phi_lam_obs_grid by integrating over f_NH dlNH.
     phi_lam_sig_eval_2D = 10.**(log_phi_lam_sig_interp(lLfrac_lam_sig_eval_2D))
     phi_lam_obs_grid= np.sum(phi_lam_sig_eval_2D * f_NH * dlNH, axis=1)
 
