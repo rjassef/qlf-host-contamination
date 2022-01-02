@@ -3,6 +3,8 @@ from astropy.constants import L_sun, c
 import astropy.units as u
 import os
 from scipy.special import erf
+from scipy.interpolate import interp1d
+from astropy.table import Table
 
 # import os
 # import re
@@ -79,6 +81,14 @@ class QLF(object):
         #Coefficients to calculate the bolometric correction for the 2-10keV band.
         self.c_HX = np.array([4.073, 12.60])
         self.k_HX = np.array([-0.026, 0.278])
+
+        #Read the Richards et al. (2006) mean quasar SED and generate an interpolation function. 
+        R06_SED_tab = Table.read(os.path.dirname(__file__)+"/Richards_06.dat", format='ascii.cds')
+        lam_R06_SED = (c/(10**(R06_SED_tab['LogF'].data)*u.Hz)).to(u.micron).value
+        self.lL_R06_SED  = interp1d(lam_R06_SED, R06_SED_tab['All'].data)
+
+        #Save the value at B-band (4400A)
+        self.lL_R06_at_B = self.lL_R06_SED(0.44)
 
         return
 
@@ -227,6 +237,20 @@ class QLF(object):
         x = Lbol/(1e10*L_sun)
         bc = self.c_B[0]*x**self.k_B[0] + self.c_B[1]*x**self.k_B[1]
         return Lbol/bc
+
+    def L_at_lam(self, Lbol, lam):
+        """
+        This method returns the luminosity of a quasar of bolometric luminosity Lbol by scaling the B-band luminosity using the Richard et al. (2006) mean quasar SED. 
+        """
+
+        #Get the B-band luminosity. 
+        L_at_B = self.L_B(Lbol)
+
+        #Get the ratio in mean quasar SED between L_B and L at lambda. 
+        lL_ratio = self.lL_R06_SED(lam.to(u.micron).value) - self.lL_R06_at_B
+
+        #Return the luminosity at wavelength lambda. 
+        return L_at_B * 10.**(lL_ratio)
 
     def L_x(self, Lbol):
         """
