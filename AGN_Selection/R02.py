@@ -13,6 +13,8 @@ class R02(SelectionCriteria):
         """
         Assumes that mag is an array of SDSS AB magnitudes with u in the first position, g in the second and r in the third.
         """
+        if np.isinf(mag).any():
+            return False
         if mag[0]-mag[1]<0.9 and mag[1]-mag[2]<0.4:
             return True
         else:

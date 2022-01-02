@@ -32,7 +32,7 @@ class Willmer06(SchechterFunction):
         #self.Lstar = 4.*np.pi*(10*u.pc)**2 * 3631*u.Jy * 10**(-0.4*self.MstarB)
 
         #In erg/s/Hz.
-        self.Lstar = 4.34447401e+20 * 10**(-0.4*self.MstarB)
+        self.Lstar = 4.34447401e+20 * 10**(-0.4*self.MstarB) * u.erg/u.s/u.Hz
 
         #Initiate the parent class. 
         super(Willmer06, self).__init__(self.alpha, self.Lstar)

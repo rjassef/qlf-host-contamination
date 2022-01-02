@@ -1,4 +1,6 @@
+import numpy as np 
+
 class Uniform(object):
 
     def P(self, Lhost_max):
-        return 1.0
+        return np.ones(Lhost_max.shape)
