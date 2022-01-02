@@ -2,6 +2,7 @@ import numpy as np
 import astropy.units as u
 from astropy.constants import L_sun
 from scipy.interpolate import interp1d
+from astropy.constants import c
 
 from util.Lhost_Lagn_max import Lhost_Lagn_max
 
@@ -57,7 +58,7 @@ def jacobian(Lfrac, Lstar_10, qlf):
 
 
 
-def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filter, SED_Model, sel_crit, glf, lLfrac_min_lim=None):
+def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filter, sed, sel_crit, glf, lLfrac_min_lim=None):
 
     """
     This is the main function of this module. For a given redshift, it returns the observed qlf at a given observed wavelength equal to the effective wavelength of the filter used / (1+z).
@@ -135,8 +136,24 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
 
     #Calculate the maximum host luminosity we can tolerate for each value of the reddening being considered. 
     Lh_La_max = np.zeros(lNH.shape)
-    for k,ebv in enumerate(ltheta):
-        Lh_La_max[k] = Lhost_Lagn_max(agn, ebv, sel_crit)
+    A_lams = 2.5*ltheta
+    for k, A_lam in enumerate(A_lams):
+        Lh_La_max[k] = Lhost_Lagn_max(sed, A_lam, sel_crit)
+    Lh_La_max_2D = np.tile(Lh_La_max, [len(lLfrac_lam_obs_grid),1])
+
+    nu_rest = (c/(lam_eff_filter/(1.+z))).to(u.Hz)
+    L_nu    = qlf.L_at_lam(Lfrac*Lstar, lam_eff_filter/(1.+z))/nu_rest
+    L_nu_2D = np.tile(L_nu, [len(lNH), 1]).T
+    #print(Lh_La_max_2D.shape, L_nu_2D.shape)
+    Lh_nu_max_2D = Lh_La_max_2D * L_nu_2D
+
+    #Lh_nu_max = (Lh_La_max * Lfrac*Lstar / (c/lam_eff_filter)).to(u.erg/u.s/u.Hz).value
+    #print(Lh_nu_max_2D)
+    #for k in range(len(lNH)):
+    #    print("{0:.2f} {1:.5f} {2:.2f}".format(lNH[k], Lh_La_max[k], glf.P(Lh_nu_max[k].to(u.erg/u.s/u.Hz).value)))
+    P_2D = glf.P(Lh_nu_max_2D)
+    print(P_2D)
+    # exit()
 
     #For each NH, we will need to evaluate the unreddened QLF at a luminosity of lLfrac_lam_obs_grid + ltheta. So let's build it as a 2D array in which each row has the same lLfrac_lam_obs_grid value modified by the reddening correction (i.e., unreddened assuming different levels of obscuration).
     lLfrac_lam_sig_eval_2D = np.tile(lLfrac_lam_obs_grid, [len(lNH), 1]).T + ltheta_2D
@@ -151,7 +168,7 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
 
     #Evaluate it and produce phi_lam_obs_grid by integrating over f_NH dlNH.
     phi_lam_sig_eval_2D = 10.**(log_phi_lam_sig_interp(lLfrac_lam_sig_eval_2D))
-    phi_lam_obs_grid= np.sum(phi_lam_sig_eval_2D * f_NH * dlNH, axis=1)
+    phi_lam_obs_grid= np.sum(phi_lam_sig_eval_2D * f_NH * dlNH * P_2D, axis=1)
 
     #Now, this is the output grid we actually want.
     nlLfrac_lam_obs    = 100
@@ -162,6 +179,6 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
 
     #Interpolate/extrapolate phi_lam_obs to put it in the required output grid and return the resulting QLF.
     print(np.min(lLfrac_lam_obs_grid), np.max(lLfrac_lam_obs_grid))
-    lphi_lam_obs_interp = interp1d(lLfrac_lam_obs_grid, np.log10(phi_lam_obs_grid), fill_value='extrapolate', kind='cubic')
+    lphi_lam_obs_interp = interp1d(lLfrac_lam_obs_grid, np.log10(phi_lam_obs_grid+1e-32), fill_value='extrapolate', kind='cubic')
     phi_lam_obs = 10.**(lphi_lam_obs_interp(lLfrac_lam_obs))*phi_lam_sig.unit
     return phi_lam_obs, dlLfrac_lam_obs*u.dex
