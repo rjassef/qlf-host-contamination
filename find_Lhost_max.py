@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+import astropy.units as u
 
 from AGN_Selection.R02 import R02
 from SEDs.lrt_SED_model import lrt_SED_model as SED_model
@@ -11,7 +12,7 @@ from util.Lhost_Lagn_max import Lhost_Lagn_max
 #Create the SED model. We will be evaluating the SEDs at wavelength lam.
 z = 0.3
 host_type = np.array([0., 1., 0.])
-lam = 0.51
+lam = 0.51*u.micron
 agn = SED_model(z, host_type, lam)
 
 #Set the selection criterion to the very simplified criterion by Richards et al. (2002)
