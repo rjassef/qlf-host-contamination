@@ -88,8 +88,10 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
     Lstar_10 = (Lstar/(1e10*L_sun)).to(1.).value
 
     #Set the grid in bolometric L/Lstar.
-    lLfrac_min = -3.0
-    lLfrac_max =  3.0 #10.0
+    #lLfrac_min = -3.0
+    #lLfrac_max =  3.0 #10.0
+    lLfrac_min = -6.0
+    lLfrac_max =  6.0
     dlLfrac    =  0.01
     lLfrac     = np.arange(lLfrac_min,lLfrac_max,dlLfrac)
     Lfrac      = 10.**lLfrac
@@ -152,7 +154,7 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
     #for k in range(len(lNH)):
     #    print("{0:.2f} {1:.5f} {2:.2f}".format(lNH[k], Lh_La_max[k], glf.P(Lh_nu_max[k].to(u.erg/u.s/u.Hz).value)))
     P_2D = glf.P(Lh_nu_max_2D)
-    print(P_2D)
+    #print(P_2D)
     # exit()
 
     #For each NH, we will need to evaluate the unreddened QLF at a luminosity of lLfrac_lam_obs_grid + ltheta. So let's build it as a 2D array in which each row has the same lLfrac_lam_obs_grid value modified by the reddening correction (i.e., unreddened assuming different levels of obscuration).
@@ -178,7 +180,7 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
     lLfrac_lam_obs     = np.arange(lLfrac_lam_obs_min, lLfrac_lam_obs_max + 0.1*dlLfrac_lam_obs, dlLfrac_lam_obs)
 
     #Interpolate/extrapolate phi_lam_obs to put it in the required output grid and return the resulting QLF.
-    print(np.min(lLfrac_lam_obs_grid), np.max(lLfrac_lam_obs_grid))
+    #print(np.min(lLfrac_lam_obs_grid), np.max(lLfrac_lam_obs_grid))
     lphi_lam_obs_interp = interp1d(lLfrac_lam_obs_grid, np.log10(phi_lam_obs_grid+1e-32), fill_value='extrapolate', kind='cubic')
     phi_lam_obs = 10.**(lphi_lam_obs_interp(lLfrac_lam_obs))*phi_lam_sig.unit
     return phi_lam_obs, dlLfrac_lam_obs*u.dex
