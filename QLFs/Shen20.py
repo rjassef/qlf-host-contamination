@@ -5,6 +5,7 @@ import os
 from scipy.special import erf
 from scipy.interpolate import interp1d
 from astropy.table import Table
+import warnings
 
 # import os
 # import re
@@ -83,7 +84,9 @@ class QLF(object):
         self.k_HX = np.array([-0.026, 0.278])
 
         #Read the Richards et al. (2006) mean quasar SED and generate an interpolation function. 
-        R06_SED_tab = Table.read(os.path.dirname(__file__)+"/Richards_06.dat", format='ascii.cds')
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore',u.UnitsWarning) 
+            R06_SED_tab = Table.read(os.path.dirname(__file__)+"/Richards_06.dat", format='ascii.cds')
         lam_R06_SED = (c/(10**(R06_SED_tab['LogF'].data)*u.Hz)).to(u.micron).value
         self.lL_R06_SED  = interp1d(lam_R06_SED, R06_SED_tab['All'].data)
 

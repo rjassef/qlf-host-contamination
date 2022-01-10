@@ -56,7 +56,8 @@ class lrt_SED_model(object):
         self.sed.get_model_fluxes()
 
         #Calculate the magnitudes.
-        self.mag = -2.5*np.log10(self.sed.jymod/self.jyzero)
+        self.mag = -2.5*np.log10(self.sed.jymod/self.jyzero+1e-32)
+        self.mag[self.mag>60] = -np.inf
 
         return
 
