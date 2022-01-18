@@ -30,6 +30,7 @@ class lrt_SED_model(object):
         #Because the LRT models work using the bolometric luminosities of the templates, we need to figure out how the bolometric luminosity ratio between the host and the AGN relates to the ratio at the specific wavelength. Note that we are interested in the ratio without AGN reddening. We compute here the ratio at the inpur wavelength for an SED with equal host and AGN luminosity.
         self.sed.comp[1:] = host_type
         self.L_at_lam_host = self.sed.L_at_lam(self.lam_rest)
+        self.L_at_V = self.sed.L_at_Lam(0.545)
         self.sed.comp[1:] = 0
         self.sed.comp[0] = 1.0
         self.L_at_lam_agn = self.sed.L_at_lam(self.lam_rest)
