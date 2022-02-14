@@ -15,6 +15,9 @@ class lrt_SED_model(object):
         #Save and renormalize the host_type if necessary. 
         self.host_type = host_type/np.sum(host_type)
 
+        #Set the bulge to host ratios.
+        self.bt_ratio = np.array([1.0, 0.25, 0.1])
+
         #Read the band zero poibts.
         self.jyzero = np.loadtxt("bandmag.dat", usecols=[2])
 
@@ -30,7 +33,9 @@ class lrt_SED_model(object):
         #Because the LRT models work using the bolometric luminosities of the templates, we need to figure out how the bolometric luminosity ratio between the host and the AGN relates to the ratio at the specific wavelength. Note that we are interested in the ratio without AGN reddening. We compute here the ratio at the inpur wavelength for an SED with equal host and AGN luminosity.
         self.sed.comp[1:] = host_type
         self.L_at_lam_host = self.sed.L_at_lam(self.lam_rest)
-        self.L_at_V = self.sed.L_at_lam(0.545)
+        self.L_at_V_host = self.sed.L_at_lam(0.545)
+        self.sed.comp[1:] = host_type * self.bt_ratio
+        self.L_at_V_bulge = self.sed.L_at_lam(0.545)
         self.sed.comp[1:] = 0
         self.sed.comp[0] = 1.0
         self.L_at_lam_agn = self.sed.L_at_lam(self.lam_rest)
@@ -61,4 +66,11 @@ class lrt_SED_model(object):
         self.mag[self.mag>60] = -np.inf
 
         return
+
+    def bulge_Lv(self, Lh_nu):
+
+        #We just multiply by the SED normalized ratio between the bulge at V-band luminosity and the total host luminosity at the rest-frame frequency.
+        Lh_nu_V_bulge = Lh_nu * self.L_at_V_bulge/self.L_at_lam_host
+
+        return Lh_nu_V_bulge
 
