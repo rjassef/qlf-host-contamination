@@ -153,7 +153,9 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
     #print(Lh_nu_max_2D)
     #for k in range(len(lNH)):
     #    print("{0:.2f} {1:.5f} {2:.2f}".format(lNH[k], Lh_La_max[k], glf.P(Lh_nu_max[k].to(u.erg/u.s/u.Hz).value)))
-    P_2D = glf.P(Lh_nu_max_2D)
+    L_bol_AGN = Lfrac*Lstar
+    L_bol_AGN_2D = np.tile(L_bol_AGN, [len(lNH), 1]).T
+    P_2D = glf.P(Lh_nu_max_2D, sed=sed, L_AGN = L_bol_AGN_2D)
     #print(P_2D)
     # exit()
 
