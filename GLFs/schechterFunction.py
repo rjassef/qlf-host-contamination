@@ -17,7 +17,7 @@ class SchechterFunction(object):
         self.norm = np.float(gammainc(self.alpha+1, self.Lhost_to_Lstar_min))
         return
 
-    def P(self, Lhost_max):
+    def P(self, Lhost_max, **kargs):
 
         #Divide by the GLF Lstar.
         Lhost_to_Lstar_max = (Lhost_max/self.Lstar).to(1).value
