@@ -7,12 +7,6 @@ from scipy.interpolate import interp1d
 from astropy.table import Table
 import warnings
 
-# import os
-# import re
-# root_path = re.search("(.*/AGN_Photoz_LSST_OpSim)/*",os.getcwd()).group(1)
-
-# import sys
-# sys.path.append(root_path+"/QLFs/")
 from .Pei92 import P92_Extinction
 
 class QLF(object):
