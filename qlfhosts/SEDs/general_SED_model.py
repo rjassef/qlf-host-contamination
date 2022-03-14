@@ -21,7 +21,7 @@ class general_SED_model(object):
         self.bps = list()
         for bp_name in bp_names:
             if bp_folder is None:
-                filename = get_pkg_data_filename(os.path.join('bandpasses', bp_name+".filter"))
+                filename = get_pkg_data_filename(os.path.join('..', 'bandpasses', bp_name+".filter"))
             else:
                 filename = os.path.join(bp_folder, bp_name)
             self.bps.append(SpectralElement.from_file(filename))

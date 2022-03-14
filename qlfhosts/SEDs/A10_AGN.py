@@ -15,11 +15,9 @@ class A10_AGN(general_SED_model):
     def __init__(self, z, bp_names=['sdssu'], bp_folder=None, cosmo=None):
 
         #Read the A10 SEDs. 
-        print(os.getcwd())
-        input()
-        fname = get_pkg_data_filename('SED_templates') #os.path.join('SED_templates', 'A10_SEDs.dat'))
-        print(fname)
-        input()
+        #print(os.path.join('..','SED_templates', 'A10_SEDs.dat'))
+        #input()
+        fname = get_pkg_data_filename(os.path.join('..', 'SED_templates', 'A10_SEDs.dat'))
         data = np.loadtxt(fname, skiprows=1)
 
         #Get the wavelengths from the frequency. 
