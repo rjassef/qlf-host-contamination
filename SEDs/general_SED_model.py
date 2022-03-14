@@ -40,22 +40,35 @@ class general_SED_model(object):
                 self.obs[-1].append(Observation(sp, bp))
 
         #Precompute the apparent magnitudes
-        self.mag = np.zeros((len(self.sps),len(self.bps)))
+        self.mag_unscaled = np.zeros((len(self.sps),len(self.bps)))
         for i,sp_obs in enumerate(self.obs):
             for j,band_obs in enumerate(sp_obs):
-                self.mag[i,j] = band_obs.effstim(flux_unit='ABmag').value
+                self.mag_unscaled[i,j] = band_obs.effstim(flux_unit='ABmag').value
 
         #Load the luminosity distance. It will be useful.
         if cosmo is None:
             from astropy.cosmology import Planck15 as cosmo
         self.DL = cosmo.luminosity_distance(z)
-        
+
         return
 
-    #Return the luminosity density of the SED at the observed wavelength lam. 
-    def Lnu(self, lam_obs):
-        Lnu_calc = np.zeros(len(self.sps))*u.erg/u.s/u.Hz
+    #Return the luminosity density of the input SED at the observed wavelength lam. 
+    def Lnu(self, lam_rest):
+        Lnu = np.zeros(len(self.sps))*u.erg/u.s/u.Hz
         for k,sp in enumerate(self.sps):
-            fnu_obs = sp(lam_obs, flux_unit='Fnu')
-            Lnu_calc[k] = (fnu_obs*4*np.pi*self.DL**2)/(1+self.z)
-        return Lnu_calc
+            fnu_obs = sp(lam_rest*(1+self.z), flux_unit='Fnu')
+            Lnu[k] = (fnu_obs*4*np.pi*self.DL**2)/(1+self.z)
+        return Lnu
+
+    #Compute the apparent magnitudes for a given luminosity density.
+    def mag(self, Lnu_norm, lam_rest):
+
+        #Get the luminosity densities of the sed models.
+        lam_obs = lam_rest*(1+self.z)
+        Lnu_input = self.Lnu(lam_obs)
+
+        #Now, calculate the magnitudes 
+        norm = np.tile(Lnu_norm/Lnu_input, (len(self.bps),1)).T
+        mag = self.mag_unscaled-2.5*np.log10(norm)
+        return mag
+
