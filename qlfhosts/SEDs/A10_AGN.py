@@ -2,7 +2,6 @@ import numpy as np
 import astropy.units as u
 import os
 from astropy.utils.data import get_pkg_data_filename
-from synphot import SpectralElement, units, Observation
 from synphot.models import Empirical1D
 from astropy.constants import c, L_sun
 import astropy.units as u
@@ -16,7 +15,11 @@ class A10_AGN(general_SED_model):
     def __init__(self, z, bp_names=['sdssu'], bp_folder=None, cosmo=None):
 
         #Read the A10 SEDs. 
-        fname = get_pkg_data_filename(os.path.join('SED_templates', 'A10_SEDs.dat'))
+        print(os.getcwd())
+        input()
+        fname = get_pkg_data_filename('SED_templates') #os.path.join('SED_templates', 'A10_SEDs.dat'))
+        print(fname)
+        input()
         data = np.loadtxt(fname, skiprows=1)
 
         #Get the wavelengths from the frequency. 

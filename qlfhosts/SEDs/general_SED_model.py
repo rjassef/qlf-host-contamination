@@ -7,7 +7,7 @@ from synphot.models import Empirical1D
 
 class general_SED_model(object):
 
-    def __init__(self, sps, z, bp_names=['sdssu'], bp_folder=None, cosmo=None):
+    def __init__(self, sps, z, bp_names=['sdssu'], bp_folder=None, cosmo=None, reddening_curve=None):
         '''
         This is a general code to handle SEDs and calculate their magnitudes and colors. It relies on the synphot_refract package.
 
@@ -49,6 +49,13 @@ class general_SED_model(object):
         if cosmo is None:
             from astropy.cosmology import Planck15 as cosmo
         self.DL = cosmo.luminosity_distance(z)
+
+        #If no reddening has been loaded, load now the default. 
+        if reddening_curve is None:
+            from ..QLFs.Pei92 import P92_Extinction
+            #NOTE: This is not correct, but since we only care about the shape of the reddening curve later in the code, this should work. 
+            self.red_model = P92_Extinction("MW")
+            self.klam = self.red_model.xi
 
         return
 

@@ -37,8 +37,11 @@ def Lhost_Lagn_max(agn_sed, hosts_sed, Alam, lam_rest, sel_crit, xlow=0, xhig=10
         print("Exceed niter_max={} iterations. Returning current solution.".format(niter_max))
     return x
 
-    def get_mags(x, x_unscaled, agn_sed, host_sed):
-        #NEed to propagate the reddening. 
+    def get_mags(x, x_unscaled, Alam, klam, agn_sed, host_sed):
+
+        #Set the 
+
+        #Need to propagate the reddening. 
         m_agn = agn_sed.mag_unscaled
         
 
