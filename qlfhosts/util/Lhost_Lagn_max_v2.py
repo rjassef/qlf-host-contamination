@@ -13,11 +13,11 @@ def Lhost_Lagn_max(agn_sed, hosts_sed, Alam, lam_rest, sel_crit, xlow=0, xhig=10
         x_unscaled[k] = Lnu_agn_unscaled[0]/Lnu_host_unscaled
 
     #Check that xmin selects the source and that xmax does not. If this is not met, then return the bound.
-    if not sel_crit.is_selected(xlow, Alam, agn):
+    if not sel_crit.is_selected(xlow, Alam, lam_rest, agn_sed, hosts_sed, k_hosts_sed):
         if debug:
             print("Object not selected as AGN at xlow. Returning xlow.")
         return xlow
-    if sel_crit.is_selected(xhig, Alam, agn):
+    if sel_crit.is_selected(xhig, Alam, lam_rest, agn_sed, hosts_sed, k_hosts_sed):
         if debug:
             print("Object selected as AGN at xhig. Returning xhig.")
         return xhig
@@ -25,7 +25,7 @@ def Lhost_Lagn_max(agn_sed, hosts_sed, Alam, lam_rest, sel_crit, xlow=0, xhig=10
     #Otherwise, bisect the way to the right solution.
     for i in range(niter_max):
         x = 0.5*(xlow+xhig)
-        if sel_crit.is_selected(x, Alam, agn):
+        if sel_crit.is_selected(x, Alam, lam_rest, agn_sed, hosts_sed, k_hosts_sed):
             xlow = x
         else:
             xhig = x
@@ -37,11 +37,5 @@ def Lhost_Lagn_max(agn_sed, hosts_sed, Alam, lam_rest, sel_crit, xlow=0, xhig=10
         print("Exceed niter_max={} iterations. Returning current solution.".format(niter_max))
     return x
 
-    def get_mags(x, x_unscaled, Alam, klam, agn_sed, host_sed):
-
-        #Set the 
-
-        #Need to propagate the reddening. 
-        m_agn = agn_sed.mag_unscaled
         
 
