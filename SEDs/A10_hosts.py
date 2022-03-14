@@ -1,3 +1,4 @@
+from http.client import LineTooLong
 import numpy as np 
 import astropy.units as u
 import os
@@ -13,7 +14,7 @@ from .general_SED_model import general_SED_model
 
 class A10_hosts(general_SED_model):
 
-    def __init__(self, z, bp_names=['sdssu'], bp_folder=None, cosmo=None):
+    def __init__(self, z, bp_names=['sdssu'], bp_folder=None, cosmo=None, likelihood=None):
 
         #Read the A10 SEDs. 
         fname = get_pkg_data_filename(os.path.join('SED_templates', 'A10_SEDs.dat'))
@@ -42,6 +43,12 @@ class A10_hosts(general_SED_model):
 
             #Add to the list.
             sps.append(sp)
+
+        #Set the likelihood. If none is provided, set it to be proportional to the number of host templates.
+        if likelihood is None:
+            self.likelihood = np.ones(len(sps))/len(sps)
+        else:
+            self.likelihood = np.array(likelihood)
 
         #Initialize the general SED model. 
         super().__init__(sps, z, bp_names, bp_folder)
