@@ -4,7 +4,7 @@ from astropy.constants import L_sun
 from scipy.interpolate import interp1d
 from astropy.constants import c
 
-from qlfhosts.util.Lhost_Lagn_max import Lhost_Lagn_max
+from qlfhosts.util.Lhost_Lagn_max_v2 import Lhost_Lagn_max
 
 """
 This version of the script matches what is done in the Shen20 pubtools, and gives very similar results. However, I think this is actually something I don't follow in their implementation in how Lx is calculated for f(NH; Lx, z).
@@ -58,7 +58,7 @@ def jacobian(Lfrac, Lstar_10, qlf):
 
 
 
-def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filter, sed, sel_crit, glf, lLfrac_min_lim=None):
+def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filter, agn_sed, hosts_sed, sel_crit, glf, lLfrac_min_lim=None):
 
     """
     This is the main function of this module. For a given redshift, it returns the observed qlf at a given observed wavelength equal to the effective wavelength of the filter used / (1+z).
@@ -137,10 +137,12 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
     ltheta_2D = np.tile(ltheta, [len(lLfrac_lam_obs_grid), 1])
 
     #Calculate the maximum host luminosity we can tolerate for each value of the reddening being considered. 
-    Lh_La_max = np.zeros(lNH.shape)
+    Lh_La_max = np.zeros((lNH.shape[0],hosts_sed.likelihood.shape[0]))
+    print(Lh_La_max.shape)
+    input()
     A_lams = 2.5*ltheta
     for k, A_lam in enumerate(A_lams):
-        Lh_La_max[k] = Lhost_Lagn_max(sed, A_lam, sel_crit)
+        Lh_La_max[k] = Lhost_Lagn_max(agn_sed, hosts_sed, A_lam, lam_eff_filter/(1.+z), sel_crit)
         print(Lh_La_max[k])
         input()
     Lh_La_max_2D = np.tile(Lh_La_max, [len(lLfrac_lam_obs_grid),1])
@@ -157,7 +159,7 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
     #    print("{0:.2f} {1:.5f} {2:.2f}".format(lNH[k], Lh_La_max[k], glf.P(Lh_nu_max[k].to(u.erg/u.s/u.Hz).value)))
     L_bol_AGN = Lfrac*Lstar
     L_bol_AGN_2D = np.tile(L_bol_AGN, [len(lNH), 1]).T
-    P_2D = glf.P(Lh_nu_max_2D, sed=sed, L_AGN = L_bol_AGN_2D)
+    P_2D = glf.P(Lh_nu_max_2D, sed=agn_sed, L_AGN = L_bol_AGN_2D)
     #print(P_2D)
     # exit()
 

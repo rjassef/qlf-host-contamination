@@ -17,7 +17,7 @@ class A10_hosts(general_SED_model):
     def __init__(self, z, bp_names=['sdssu'], bp_folder=None, cosmo=None, likelihood=None):
 
         #Read the A10 SEDs. 
-        fname = get_pkg_data_filename(os.path.join('SED_templates', 'A10_SEDs.dat'))
+        fname = get_pkg_data_filename(os.path.join('..','SED_templates', 'A10_SEDs.dat'))
         data = np.loadtxt(fname, skiprows=1)
 
         #Get the wavelengths from the frequency. 
