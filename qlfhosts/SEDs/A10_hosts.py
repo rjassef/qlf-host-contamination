@@ -50,6 +50,9 @@ class A10_hosts(general_SED_model):
         else:
             self.likelihood = np.array(likelihood)
 
+        #Set the B/T ratios.
+        self.bt_ratio = np.array([1.0, 0.25, 0.1])
+
         #Initialize the general SED model. 
         super().__init__(sps, z, bp_names, bp_folder)
 

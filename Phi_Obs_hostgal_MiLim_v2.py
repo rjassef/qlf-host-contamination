@@ -136,32 +136,44 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
     ltheta = 10.**(lNH-22) * ltheta_fact
     ltheta_2D = np.tile(ltheta, [len(lLfrac_lam_obs_grid), 1])
 
-    #Calculate the maximum host luminosity we can tolerate for each value of the reddening being considered. 
+    #Before calculating the maximum host luminosity allowed, let's pre-compute a number of useful quantities. 
+    # - Find the unscaled luminosity ratio. 
+    Lnu_agn_unscaled = agn_sed.Lnu(lam_eff_filter/(1.+z))
+    Lnu_hosts_unscaled = hosts_sed.Lnu(lam_eff_filter/(1.+z))
+    x_unscaled_all = Lnu_hosts_unscaled/Lnu_agn_unscaled[0]
+    # - Figure out the reddening factors for the AGN. 
+    Aband_to_Alam = dict()
+    klam_norm = agn_sed.klam(lam_eff_filter/(1.+z))
+    for j, bp in enumerate(agn_sed.bps):
+        lam_eff_band = bp.avgwave()
+        bp_name = agn_sed.bp_names[j]
+        Aband_to_Alam[bp_name] = (agn_sed.klam(lam_eff_band/(1+agn_sed.z)) / klam_norm)
+
+    #Calculate the maximum host luminosity we can tolerate for each value of the reddening being considered for each host template. 
     Lh_La_max = np.zeros((lNH.shape[0],hosts_sed.likelihood.shape[0]))
-    print(Lh_La_max.shape)
-    input()
     A_lams = 2.5*ltheta
     for k, A_lam in enumerate(A_lams):
-        Lh_La_max[k] = Lhost_Lagn_max(agn_sed, hosts_sed, A_lam, lam_eff_filter/(1.+z), sel_crit)
-        print(Lh_La_max[k])
-        input()
-    Lh_La_max_2D = np.tile(Lh_La_max, [len(lLfrac_lam_obs_grid),1])
+        Lh_La_max[k] = Lhost_Lagn_max(agn_sed, hosts_sed, A_lam, Aband_to_Alam, sel_crit, x_unscaled_all)
 
+    #Estimate some useful quantities.
     nu_rest = (c/(lam_eff_filter/(1.+z))).to(u.Hz)
     L_nu    = qlf.L_at_lam(Lfrac*Lstar, lam_eff_filter/(1.+z))/nu_rest
     L_nu_2D = np.tile(L_nu, [len(lNH), 1]).T
-    #print(Lh_La_max_2D.shape, L_nu_2D.shape)
-    Lh_nu_max_2D = Lh_La_max_2D * L_nu_2D
-
-    #Lh_nu_max = (Lh_La_max * Lfrac*Lstar / (c/lam_eff_filter)).to(u.erg/u.s/u.Hz).value
-    #print(Lh_nu_max_2D)
-    #for k in range(len(lNH)):
-    #    print("{0:.2f} {1:.5f} {2:.2f}".format(lNH[k], Lh_La_max[k], glf.P(Lh_nu_max[k].to(u.erg/u.s/u.Hz).value)))
     L_bol_AGN = Lfrac*Lstar
     L_bol_AGN_2D = np.tile(L_bol_AGN, [len(lNH), 1]).T
-    P_2D = glf.P(Lh_nu_max_2D, sed=agn_sed, L_AGN = L_bol_AGN_2D)
-    #print(P_2D)
-    # exit()
+
+    #This is the array that will hold the combined probabilities. 
+    P_2D = np.zeros(L_nu_2D.shape)
+
+    #Iterate by template to fill out the P_2D array.
+    for k_sed in range(len(hosts_sed.sps)):
+        if hosts_sed.likelihood[k_sed] == 0.:
+            continue
+        Lh_La_max_2D = np.tile(Lh_La_max[:,k_sed], [len(lLfrac_lam_obs_grid),1])
+        Lh_nu_max_2D = Lh_La_max_2D * L_nu_2D
+
+        P_host = glf.P(Lh_nu_max_2D, hosts_sed=hosts_sed, k_hosts_sed=k_sed, L_AGN=L_bol_AGN_2D, lam_rest=lam_eff_filter/(1.+z))
+        P_2D += hosts_sed.likelihood[k_sed] * P_host
 
     #For each NH, we will need to evaluate the unreddened QLF at a luminosity of lLfrac_lam_obs_grid + ltheta. So let's build it as a 2D array in which each row has the same lLfrac_lam_obs_grid value modified by the reddening correction (i.e., unreddened assuming different levels of obscuration).
     lLfrac_lam_sig_eval_2D = np.tile(lLfrac_lam_obs_grid, [len(lNH), 1]).T + ltheta_2D
