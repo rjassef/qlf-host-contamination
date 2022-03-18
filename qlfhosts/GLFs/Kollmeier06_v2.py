@@ -1,3 +1,4 @@
+from matplotlib.pyplot import hot
 import numpy as np
 import astropy.units as u
 from astropy.constants import L_sun, c
@@ -24,7 +25,7 @@ class Kollmeier06(object):
         hosts_sed = kargs['hosts_sed']
         k_hosts_sed = kargs['k_hosts_sed']
         lam_rest = kargs['lam_rest']
-        Lh_nu_V_max = Lh_nu_max * hosts_sed.Lnu(0.545*u.micron)[k_hosts_sed]/hosts_sed.Lnu(lam_rest)[k_hosts_sed]
+        Lh_nu_V_max = Lh_nu_max * hosts_sed.Lnu(0.545*u.micron)[k_hosts_sed]/hosts_sed.Lnu(lam_rest)[k_hosts_sed] * (lam_rest/(0.545*u.micron)).to(1).value
         Lh_nu_V_bulge_max = hosts_sed.bt_ratio[k_hosts_sed] * Lh_nu_V_max
 
         #Now, get the SMBH mass using the relation in eqn. (5) of Gultekin+09. We assume the solar Johnson-V luminosity density of Willmer (2018). Note that we get M_BH in solar masses.
