@@ -141,8 +141,6 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
     A_lams = 2.5*ltheta
     for k, A_lam in enumerate(A_lams):
         Lh_La_max[k] = Lhost_Lagn_max(sed, A_lam, sel_crit)
-        print(Lh_La_max[k])
-        input()
     Lh_La_max_2D = np.tile(Lh_La_max, [len(lLfrac_lam_obs_grid),1])
 
     nu_rest = (c/(lam_eff_filter/(1.+z))).to(u.Hz)
