@@ -4,7 +4,7 @@ from astropy.constants import L_sun
 from scipy.interpolate import interp1d
 from astropy.constants import c
 
-from qlfhosts.util.Lhost_Lagn_max_v2 import Lhost_Lagn_max
+from qlfhosts.util.Lhost_Lagn_max import Lhost_Lagn_max
 
 """
 This version of the script matches what is done in the Shen20 pubtools, and gives very similar results. However, I think this is actually something I don't follow in their implementation in how Lx is calculated for f(NH; Lx, z).

@@ -3,15 +3,15 @@ import astropy.units as u
 from astropy.constants import c
 import matplotlib.pyplot as plt
 
-from Phi_Obs_hostgal_MiLim_v2 import get_phi_lam_obs
+from Phi_Obs_hostgal_MiLim import get_phi_lam_obs
 #from Phi_Obs_v2_MiLim import get_phi_lam_obs
 from qlfhosts.QLFs.Shen20 import QLF
 
 from qlfhosts.SEDs import A10_AGN, A10_hosts
-from qlfhosts.AGN_Selection.R02_v2 import R02
+from qlfhosts.AGN_Selection.R02 import R02
 from qlfhosts.GLFs.Willmer06 import Willmer06
 from qlfhosts.GLFs.Uniform import Uniform
-from qlfhosts.GLFs.Kollmeier06_v2 import Kollmeier06
+from qlfhosts.GLFs.Kollmeier06 import Kollmeier06
 
 #Set the redshift at which we want to estimate the observed QLF. 
 #z = 1.0
@@ -91,4 +91,4 @@ plt.xlabel(r'log Observed Luminosity in i-band ($\rm erg~\rm s^{-1})$')
 plt.ylabel(r'log Space Density ($\rm dex^{-1}~\rm cMpc^{-3})$')
 
 #plt.show()
-plt.savefig("Predicted_AGN_LF_v2.png")
+plt.savefig("Predicted_AGN_LF.png")
