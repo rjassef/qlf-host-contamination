@@ -69,8 +69,8 @@ class lrt_SED_model(object):
 
     def bulge_Lv(self, Lh_nu):
 
-        #We just multiply by the SED normalized ratio between the bulge at V-band luminosity and the total host luminosity at the rest-frame frequency.
-        Lh_nu_V_bulge = Lh_nu * self.L_at_V_bulge/self.L_at_lam_host
+        #We just multiply by the SED normalized ratio between the bulge at V-band luminosity and the total host luminosity at the rest-frame frequency. The wavelength factors are because L_at_lam values are nu*Lnu.
+        Lh_nu_V_bulge = Lh_nu * self.L_at_V_bulge/self.L_at_lam_host * (0.545/self.lam_rest)
 
         return Lh_nu_V_bulge
 
