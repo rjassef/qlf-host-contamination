@@ -6,56 +6,42 @@ from astropy.constants import c
 
 from qlfhosts.util.Lhost_Lagn_max import Lhost_Lagn_max
 
-"""
-This version of the script matches what is done in the Shen20 pubtools, and gives very similar results. However, I think this is actually something I don't follow in their implementation in how Lx is calculated for f(NH; Lx, z).
+# def get_Lfrac_lam(Lfrac, Lstar_10, qlf):
+#     """
+#     This function returns L_lam(L)/L_lam(Lstar). This function is only valid for UV/optical wavelengths, were we assume the conversion factors are just proportional to the B-band conversion.
 
-Additionally, it applies the Mi_lim in L_bol space, which I think it is the more correct thing to do.
+#     Parameters
+#     ----------
 
-"""
+#     Lfrac: numpy array
+#         Values of L/Lstar for which to calculate Lfrac_lam = L_lam/L_lam(Lstar)
 
-def get_Lfrac_lam(Lfrac, Lstar_10, qlf):
-    """
-    This function returns L_lam(L)/L_lam(Lstar). This function is only valid for UV/optical wavelengths, were we assume the conversion factors are just proportional to the B-band conversion.
+#     Lstar_10: float
+#         Value of Lstar in units of 10^10 Lsun.
 
-    Parameters
-    ----------
+#     """
+#     D = np.tile(qlf.c_B*Lstar_10**qlf.k_B, [len(Lfrac),1])
+#     Lfrac_2D = np.tile(Lfrac, [len(qlf.c_B),1]).T
+#     return np.sum(D,axis=1)/np.sum(D*Lfrac_2D**(qlf.k_B-1),axis=1)
 
-    Lfrac: numpy array
-        Values of L/Lstar for which to calculate Lfrac_lam = L_lam/L_lam(Lstar)
+# def jacobian(Lfrac, Lstar_10, qlf):
+#     """
+#     This function returns the jacobian dlog L / dlog L_lam.
 
-    Lstar_10: float
-        Value of Lstar in units of 10^10 Lsun.
+#     Parameters
+#     ----------
 
-    qlf: QLF object
-        QLF being used.
+#     Lfrac: numpy array
+#         Values of L/Lstar for which to calculate Lfrac_lam = L_lam/L_lam(Lstar)
 
-    """
-    D = np.tile(qlf.c_B*Lstar_10**qlf.k_B, [len(Lfrac),1])
-    Lfrac_2D = np.tile(Lfrac, [len(qlf.c_B),1]).T
-    return np.sum(D,axis=1)/np.sum(D*Lfrac_2D**(qlf.k_B-1),axis=1)
+#     Lstar_10: float
+#         Value of Lstar in units of 10^10 Lsun.
 
-def jacobian(Lfrac, Lstar_10, qlf):
-    """
-    This function returns the jacobian dlog L / dlog L_lam.
-
-    Parameters
-    ----------
-
-    Lfrac: numpy array
-        Values of L/Lstar for which to calculate Lfrac_lam = L_lam/L_lam(Lstar)
-
-    Lstar_10: float
-        Value of Lstar in units of 10^10 Lsun.
-
-    qlf: QLF object
-        QLF being used.
-
-    """
-    D = np.tile(qlf.c_B*Lstar_10**qlf.k_B, [len(Lfrac),1])
-    Lfrac_2D = np.tile(Lfrac, [len(qlf.c_B),1]).T
-    return np.sum(-D*Lfrac_2D**qlf.k_B,axis=1) / np.sum(D*(qlf.k_B -1)*Lfrac_2D**qlf.k_B,axis=1)
-    #return np.sum(D*(1.+qlf.k_B)*Lfrac_2D**qlf.k_B, axis=1)/np.sum(D*Lfrac_2D**qlf.k_B, axis=1)
-
+#     """
+#     D = np.tile(qlf.c_B*Lstar_10**qlf.k_B, [len(Lfrac),1])
+#     Lfrac_2D = np.tile(Lfrac, [len(qlf.c_B),1]).T
+#     return np.sum(-D*Lfrac_2D**qlf.k_B,axis=1) / np.sum(D*(qlf.k_B -1)*Lfrac_2D**qlf.k_B,axis=1)
+#     #return np.sum(D*(1.+qlf.k_B)*Lfrac_2D**qlf.k_B, axis=1)/np.sum(D*Lfrac_2D**qlf.k_B, axis=1)
 
 
 def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filter, agn_sed, hosts_sed, sel_crit, glf, lLfrac_min_lim=None):
@@ -83,44 +69,46 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
 
     """
 
-    #Start by getting the value of Lstar in units of 10^10 Lsun, which will be useful later on.
+    # #Start by getting the value of Lstar in units of 10^10 Lsun, which will be useful later on.
     Lstar = 10.**(qlf.log_Lstar(z))*qlf.Lstar_units
     Lstar_10 = (Lstar/(1e10*L_sun)).to(1.).value
 
-    #Set the grid in bolometric L/Lstar.
-    #lLfrac_min = -3.0
-    #lLfrac_max =  3.0 #10.0
-    lLfrac_min = -6.0
-    lLfrac_max =  6.0
-    dlLfrac    =  0.01
-    lLfrac     = np.arange(lLfrac_min,lLfrac_max,dlLfrac)
-    Lfrac      = 10.**lLfrac
+    # #Set the grid in bolometric L/Lstar.
+    # #lLfrac_min = -3.0
+    # #lLfrac_max =  3.0 #10.0
+    # lLfrac_min = -6.0
+    # lLfrac_max =  6.0
+    # dlLfrac    =  0.01
+    # lLfrac     = np.arange(lLfrac_min,lLfrac_max,dlLfrac)
+    # Lfrac      = 10.**lLfrac
 
-    #Get the bolometric QLF evaluated in the grid of Lfrac.
-    phi_bol = qlf.phi_bol_Lfrac(Lfrac, z)
+    # #Get the bolometric QLF evaluated in the grid of Lfrac.
+    # phi_bol = qlf.phi_bol_Lfrac(Lfrac, z)
 
-    #Apply the limit in requested.
-    if lLfrac_min_lim is not None:
-        #phi_bol[lLfrac<=lLfrac_min_lim] = 0.
-        phi_bol[lLfrac<=lLfrac_min_lim] = 1.e-32*phi_bol.unit
+    # #Apply the limit in requested.
+    # if lLfrac_min_lim is not None:
+    #     #phi_bol[lLfrac<=lLfrac_min_lim] = 0.
+    #     phi_bol[lLfrac<=lLfrac_min_lim] = 1.e-32*phi_bol.unit
 
-    #Transform the bolometric QLF to the intrinsic luminosity QLF in the band. We assume that the bolometric correction in all bands of interest is proportional to the one in the B-band, as is done in the Hopkins07 provided code.
-    phi_lam = phi_bol*jacobian(Lfrac, Lstar_10, qlf)
-    Lfrac_lam    = get_Lfrac_lam(Lfrac, Lstar_10, qlf)
-    lLfrac_lam   = np.log10(Lfrac_lam)
-    #dlLfrac_lam  = dlLfrac/jacobian(Lfrac, Lstar_10, qlf)
+    # #Transform the bolometric QLF to the intrinsic luminosity QLF in the band. We assume that the bolometric correction in all bands of interest is proportional to the one in the B-band, as is done in the Hopkins07 provided code.
+    # phi_lam = phi_bol*jacobian(Lfrac, Lstar_10, qlf)
+    # Lfrac_lam    = get_Lfrac_lam(Lfrac, Lstar_10, qlf)
+    # lLfrac_lam   = np.log10(Lfrac_lam)
+    # #dlLfrac_lam  = dlLfrac/jacobian(Lfrac, Lstar_10, qlf)
 
-    #Since there is a natural dispersion to the bolometric corrections, we convolve phi_lam with the uncertainty function to take it into account.
-    phi_lam_2D        = np.tile(phi_lam, (len(phi_lam), 1))
-    sigma             = qlf.get_sigma(Lfrac, Lstar_10, lam_eff_filter/(1.+z))
-    lLfrac_lam_sig    = lLfrac_lam
-    sigma_2D          = np.tile(sigma, (len(sigma), 1))
-    lLfrac_lam_2D     = np.tile(lLfrac_lam, (len(lLfrac_lam), 1))
-    lLfrac_lam_sig_2D = np.tile(lLfrac_lam_sig, (len(lLfrac_lam), 1)).T
+    # #Since there is a natural dispersion to the bolometric corrections, we convolve phi_lam with the uncertainty function to take it into account.
+    # phi_lam_2D        = np.tile(phi_lam, (len(phi_lam), 1))
+    # sigma             = qlf.get_sigma(Lfrac, Lstar_10, lam_eff_filter/(1.+z))
+    # lLfrac_lam_sig    = lLfrac_lam
+    # sigma_2D          = np.tile(sigma, (len(sigma), 1))
+    # lLfrac_lam_2D     = np.tile(lLfrac_lam, (len(lLfrac_lam), 1))
+    # lLfrac_lam_sig_2D = np.tile(lLfrac_lam_sig, (len(lLfrac_lam), 1)).T
 
-    p = (2.*np.pi)**-0.5 * sigma_2D**-1 * np.exp( -0.5*( (lLfrac_lam_sig_2D - lLfrac_lam_2D)/sigma_2D)**2)
+    # p = (2.*np.pi)**-0.5 * sigma_2D**-1 * np.exp( -0.5*( (lLfrac_lam_sig_2D - lLfrac_lam_2D)/sigma_2D)**2)
 
-    phi_lam_sig = np.sum(phi_lam_2D*p * dlLfrac, axis=1)
+    # phi_lam_sig = np.sum(phi_lam_2D*p * dlLfrac, axis=1)
+
+    phi_lam_sig, lLfrac_lam_sig, lLfrac = qlf.get_phi_lam_no_red(z, lam_eff_filter/(1+z))
 
     #The next step is to convolve with the obscuration function. The issue here is that the observed luminosity in the band is a function of the intrinsic luminosity and the obscuration.
     lNH_min = 20.
@@ -156,6 +144,7 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
         Lh_La_max[k] = Lhost_Lagn_max(agn_sed, hosts_sed, A_lam, Aband_to_Alam, sel_crit, x_unscaled_all)
 
     #Estimate some useful quantities.
+    Lfrac = 10**lLfrac
     nu_rest = (c/(lam_eff_filter/(1.+z))).to(u.Hz)
     L_nu    = qlf.L_at_lam(Lfrac*Lstar, lam_eff_filter/(1.+z))/nu_rest
     L_nu_2D = np.tile(L_nu, [len(lNH), 1]).T

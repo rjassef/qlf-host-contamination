@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 
 from Phi_Obs_hostgal_MiLim import get_phi_lam_obs
 #from Phi_Obs_v2_MiLim import get_phi_lam_obs
-from qlfhosts.QLFs.Shen20 import QLF
+#from qlfhosts.QLFs.Shen20 import QLF
+from qlfhosts.QLFs import S20_QLF as QLF
 
 from qlfhosts.SEDs import A10_AGN, A10_hosts
 from qlfhosts.AGN_Selection.R02 import R02

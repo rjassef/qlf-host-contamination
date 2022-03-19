@@ -1,16 +1,20 @@
 import numpy as np
 from astropy.constants import L_sun
 import astropy.units as u
-
 import os
-import re
-root_path = re.search("(.*/AGN_Photoz_LSST_OpSim)/*",os.getcwd()).group(1)
+from astropy.utils.data import get_pkg_data_filename
 
-import sys
-sys.path.append(root_path+"/QLFs/")
-from Pei92 import P92_Extinction
+# import os
+# import re
+# root_path = re.search("(.*/AGN_Photoz_LSST_OpSim)/*",os.getcwd()).group(1)
 
-class QLF(object):
+#import sys
+#sys.path.append(root_path+"/QLFs/")
+from .Pei92 import P92_Extinction
+
+from .HS_class import HS_class
+
+class QLF(HS_class):
 
     """
     Class that implements the Quasar Luminosity Function from Hopkins et al. (2007, ApJ, 654. 731), shortenned to H07 hereafter.
@@ -41,7 +45,8 @@ class QLF(object):
             return
 
         #Read the QLF model parameters from Shen20.dat, which is just Table 4 of H07.
-        H07_T4 = open(root_path+"/QLFs/Hopkins07.dat")
+        #H07_T4 = open(root_path+"/QLFs/Hopkins07.dat")
+        H07_T4 = open(get_pkg_data_filename("Hopkins07.dat"))
         for line in H07_T4:
             x = line.split()
             exec("self.{0} = {1}".format(x[0],x[icol]))
@@ -133,7 +138,7 @@ class QLF(object):
         Based on equations (13-16) of H07.
 
         """
-        z_c = z_c0
+        z_c = self.z_c0
         if L<=self.Lc:
             z_c *= ((L/self.Lc).to(1))**self.alpha
 

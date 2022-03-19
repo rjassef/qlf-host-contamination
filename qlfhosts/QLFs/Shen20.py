@@ -8,8 +8,9 @@ from astropy.table import Table
 import warnings
 
 from .Pei92 import P92_Extinction
+from .HS_class import HS_class
 
-class QLF(object):
+class QLF(HS_class):
 
     """
     Class that implements the Quasar Luminosity Function from Shen et al. (2020, arXiv:2001.02696), shortenned to S20 hereafter.
