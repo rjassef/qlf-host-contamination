@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from Phi_Obs_hostgal_MiLim import get_phi_lam_obs
 from qlfhosts.QLFs import S20_QLF as QLF
 
-from qlfhosts.SEDs import A10_AGN, A10_hosts
+from qlfhosts.SEDs import R06_AGN, A10_hosts
 from qlfhosts.AGN_Selection import R02
 from qlfhosts.GLFs import Willmer06, Uniform, Kollmeier06
 
@@ -21,7 +21,7 @@ lam_eff_filter = 5000.*u.angstrom
 bp_names = ['sdssu', 'sdssg', 'sdssr']
 
 #Set up the SED models to use. 
-agn_sed = A10_AGN(z, bp_names=bp_names)
+agn_sed = R06_AGN(z, bp_names=bp_names)
 hosts_sed = A10_hosts(z, bp_names=bp_names)
 hosts_sed.likelihood = np.array([0. ,1. ,0.])
 
@@ -88,4 +88,4 @@ plt.xlabel(r'log Observed Luminosity in i-band ($\rm erg~\rm s^{-1})$')
 plt.ylabel(r'log Space Density ($\rm dex^{-1}~\rm cMpc^{-3})$')
 
 #plt.show()
-plt.savefig("Predicted_AGN_LF.png")
+plt.savefig("Predicted_AGN_LF.R06.png")

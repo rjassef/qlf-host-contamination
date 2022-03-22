@@ -18,7 +18,7 @@ class R06_AGN(general_SED_model):
     def __init__(self, z, bp_names=['sdssu'], bp_folder=None, cosmo=None):
 
         #Read the R06 mean AGN SED.
-        fname = get_pkg_data_filename(os.path.join('SED_templates', 'Richards_06.dat'))
+        fname = get_pkg_data_filename(os.path.join('..','SED_templates', 'Richards_06.dat'))
         with warnings.catch_warnings():
             warnings.simplefilter('ignore',u.UnitsWarning) 
             R06_SED_tab = Table.read(fname, format='ascii.cds')
