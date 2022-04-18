@@ -108,7 +108,7 @@ def get_phi_lam_obs(z, qlf, lLfrac_lam_obs_min, lLfrac_lam_obs_max, lam_eff_filt
 
     # phi_lam_sig = np.sum(phi_lam_2D*p * dlLfrac, axis=1)
 
-    phi_lam_sig, lLfrac_lam_sig, lLfrac = qlf.get_phi_lam_no_red(z, lam_eff_filter/(1+z))
+    phi_lam_sig, lLfrac_lam_sig, lLfrac = qlf.get_phi_lam_no_red_Lfrac(z, lam_eff_filter/(1+z), lLfrac_min_lim=lLfrac_min_lim)
 
     #The next step is to convolve with the obscuration function. The issue here is that the observed luminosity in the band is a function of the intrinsic luminosity and the obscuration.
     lNH_min = 20.

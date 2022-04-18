@@ -1,12 +1,39 @@
 import numpy as np
-from astropy.constants import L_sun
+from astropy.constants import L_sun, c
+import astropy.units as u
 
 class HS_class(object):
 
     def __init__(self):
         return
 
-    def get_phi_lam_no_red(self, z, lam_rest, lLfrac_min_lim=None):
+    def get_phi_lam_no_red(self, z, lam_rest, Mi_lim=None):
+
+        #Get the luminosity function. 
+        phi_lam_sig, lLfrac_lam_sig, lLfrac = self.get_phi_lam_no_red_Lfrac(z, lam_rest)
+
+        #Transform the luminosity fractions into luminosities.
+        Lstar = 10.**(self.log_Lstar(z))*self.Lstar_units
+        Lstar_lam = self.L_at_lam(Lstar, lam_rest)
+        lLlam_sig = lLfrac_lam_sig + np.log10(Lstar_lam.to(self.Lstar_units).value)
+        lLbol = lLfrac + self.log_Lstar(z)
+
+        #Place a cut at the given absolute magnitude if requested. 
+        if Mi_lim is not None:
+            #The log of L_at_iband. 
+            Fnu_i_lim = 3631.*u.Jy * 10**(-0.4*Mi_lim)
+            L_i_lim = Fnu_i_lim * 4.*np.pi * (10.*u.pc)**2 * (c/(7500.*u.AA))
+            lL_i_lim = np.log10(L_i_lim)
+            #Use the Lstar_at_lam and Lstar_at_i to convert into L_lam_lim.
+            Lstar_i = self.L_at_lam(Lstar, 7500.*u.AA)
+            lLlam_lim = lL_i_lim + np.log10(Lstar_lam/Lstar_i)
+            #Apply the limit. 
+            phi_lam_sig[lLlam_sig<=lLlam_lim] = 0.
+            
+        #Return the values.
+        return phi_lam_sig, lLlam_sig, lLbol
+
+    def get_phi_lam_no_red_Lfrac(self, z, lam_rest, lLfrac_min_lim=None):
 
         #Start by getting the value of Lstar in units of 10^10 Lsun, which will be useful later on.
         Lstar = 10.**(self.log_Lstar(z))*self.Lstar_units
