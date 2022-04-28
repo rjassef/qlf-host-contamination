@@ -11,11 +11,18 @@ from qlfhosts.QLFs import S20_QLF as QLF
 
 from qlfhosts.SEDs import R06_AGN, A10_hosts
 from qlfhosts.AGN_Selection import R02
-from qlfhosts.GLFs import Uniform
+from qlfhosts.GLFs import Uniform, Willmer06, Kollmeier06
 
-#Set the redshift at which we want to estimate the observed QLF. 
-#z = 1.0
-z = 0.5
+#Set the redshift range and the number of logarithmically separated steps within which to count the number of AGN. 
+#zmin = 0.25
+#zmax = 0.75
+#nz = 10
+zmin = 0.3
+zmax = 6.7
+nz = 50
+zs = np.logspace(np.log10(zmin), np.log10(zmax), nz)
+dzs = zs[1:]-zs[:-1]
+
 
 #Set the observed wavelength at which to estimate the QLF.
 #lam_eff_filter = 7500.*u.angstrom
@@ -27,11 +34,11 @@ m_bright = 15.0
 m_zp_jy = 3631.0*u.Jy
 
 #Set the observed magnitude grid.
-dmag = 0.5
-m_grid = np.arange(m_bright, m_faint+0.1*dmag, dmag)
-Ntot = np.zeros(m_grid.shape)
-#print(m_grid)
-#exit()
+dmag = 0.5 * u.mag
+m_grid = np.arange(m_bright, m_faint+0.1*dmag.value, dmag.value)
+Ntot1 = np.zeros(m_grid.shape)
+Ntot2 = np.zeros(m_grid.shape)
+Ntot3 = np.zeros(m_grid.shape)
 
 #Set the band names.
 bp_names = ['sdssu', 'sdssg', 'sdssr']
@@ -42,15 +49,13 @@ qlf = QLF()
 #Set up the AGN selection criteria.
 sel_crit = R02()
 
-#Set the redshift grid.
-zs = np.logspace(-2, -1, 10)
-dzs = zs[1:]-zs[:-1]
-#zs = [0.5]
+#Pre calculate the luminosity distances. Evaluate at the mid-point of the redshift range.
+zuse = zs[:-1] + 0.5*dzs
+DLs = cosmo.luminosity_distance(zuse)
+Vcs = cosmo.comoving_volume(zs[1:])-cosmo.comoving_volume(zs[:-1])
 
 #Iterate on redshift. 
-for k, dz in enumerate(dzs):
-
-    z = zs[k]+0.5*dz
+for k, z in enumerate(zuse):
 
     #Set up the SED models to use. 
     agn_sed = R06_AGN(z, bp_names=bp_names, cosmo=cosmo)
@@ -58,91 +63,59 @@ for k, dz in enumerate(dzs):
     hosts_sed.likelihood = np.array([0. ,1. ,0.])
 
     #Set up the GLF to use.
-    glf = Uniform()
+    glf1 = Uniform()
+    glf2 = Willmer06(z)
+    glf3 = Kollmeier06()
 
     #Transform the magnitude limits to boundaries. 
-    DL = cosmo.luminosity_distance(z)
+    #DL = cosmo.luminosity_distance(z)
+    DL = DLs[k]
     lfact = np.log10(m_zp_jy * 4*np.pi*DL**2 * c/lam_eff_filter / qlf.Lstar_units)
     lLlam_obs_min = lfact - 0.4*m_faint
     lLlam_obs_max = lfact - 0.4*m_bright
 
     #Estimate the observed QLF.
-    phi, dlLlam = get_phi_lam_obs(z, qlf, lLlam_obs_min, lLlam_obs_max, lam_eff_filter , agn_sed, hosts_sed, sel_crit, glf)
-
-    #print(phi.unit)
-    #exit()
+    phi1, dlLlam1 = get_phi_lam_obs(z, qlf, lLlam_obs_min, lLlam_obs_max, lam_eff_filter , agn_sed, hosts_sed, sel_crit, glf1)
+    phi2, dlLlam2 = get_phi_lam_obs(z, qlf, lLlam_obs_min, lLlam_obs_max, lam_eff_filter , agn_sed, hosts_sed, sel_crit, glf2)
+    phi3, dlLlam3 = get_phi_lam_obs(z, qlf, lLlam_obs_min, lLlam_obs_max, lam_eff_filter , agn_sed, hosts_sed, sel_crit, glf3)
 
     #Get the luminosity values.
-    lLlam = np.arange(lLlam_obs_min, lLlam_obs_max+0.1*dlLlam.value, dlLlam.value)
+    lLlam1 = np.arange(lLlam_obs_min, lLlam_obs_max+0.1*dlLlam1.value, dlLlam1.value)
+    lLlam2 = np.arange(lLlam_obs_min, lLlam_obs_max+0.1*dlLlam2.value, dlLlam2.value)
+    lLlam3 = np.arange(lLlam_obs_min, lLlam_obs_max+0.1*dlLlam3.value, dlLlam3.value)
 
     #Convert to observed magnitude. 
     nu_rest = (c*(1+z)/lam_eff_filter)
-    Lnu = 10**lLlam * qlf.Lstar_units/nu_rest
-    Fnu = Lnu*(1+z)/(4*np.pi*DL**2)
-    mag = -2.5*np.log10(Fnu/m_zp_jy)
+    Lnu1 = 10**lLlam1 * qlf.Lstar_units/nu_rest
+    Fnu1 = Lnu1*(1+z)/(4*np.pi*DL**2)
+    mag1 = -2.5*np.log10(Fnu1/m_zp_jy)
+    Lnu2 = 10**lLlam2 * qlf.Lstar_units/nu_rest
+    Fnu2 = Lnu2*(1+z)/(4*np.pi*DL**2)
+    mag2 = -2.5*np.log10(Fnu2/m_zp_jy)
+    Lnu3 = 10**lLlam3 * qlf.Lstar_units/nu_rest
+    Fnu3 = Lnu3*(1+z)/(4*np.pi*DL**2)
+    mag3 = -2.5*np.log10(Fnu3/m_zp_jy)
 
     #Get the comoving volume element.
-    Vc = cosmo.comoving_volume(zs[k+1])-cosmo.comoving_volume(zs[k])
+    #Vc = cosmo.comoving_volume(zs[k+1])-cosmo.comoving_volume(zs[k])
+    Vc = Vcs[k]
 
     #Interpolate in the histogram grid.
-    phi_interp = interp1d(mag, phi.value, fill_value='extrapolate')
-    Ntot += phi_interp(m_grid)*phi.unit * Vc * dmag
+    phi_interp1 = interp1d(mag1, phi1.value, fill_value='extrapolate')
+    phi_interp2 = interp1d(mag2, phi2.value, fill_value='extrapolate')
+    phi_interp3 = interp1d(mag3, phi3.value, fill_value='extrapolate')
 
-    #plt.plot(lLlam+np.log10(L_sun.to(u.erg/u.s).value), np.log10(phi.value))
-    #plt.plot(mag, phi*Vc)
-    plt.plot(m_grid, Ntot)
-    plt.yscale('log')
-    #plt.ylim([10**(-7.), 10**(-3.5)])
-    #plt.ylim([])
-    plt.show()
+    #We have to multiple by -1 since mag/dex = -2.5 within astropy.units. There is probably a more elegant wat to do this, but this works. 
+    Ntot1 += (phi_interp1(m_grid)*phi1.unit * Vc * dmag * -1).to(1).value
+    Ntot2 += (phi_interp2(m_grid)*phi2.unit * Vc * dmag * -1).to(1).value
+    Ntot3 += (phi_interp3(m_grid)*phi3.unit * Vc * dmag * -1).to(1).value
 
-exit()
-
-#Estimate now without the selection applied considering reddening and host contamination.
-glf2 = Uniform()
-phi2, dlLfrac2 = get_phi_lam_obs(z, qlf, lL_frac_min, lL_frac_max, lam_eff_filter , agn_sed, hosts_sed, sel_crit, glf2)
-
-#Estimate now with the Eddington-ratio dependent host distribution.
-glf3 = Kollmeier06()
-phi3, dlLfrac3 = get_phi_lam_obs(z, qlf, lL_frac_min, lL_frac_max, lam_eff_filter , agn_sed, hosts_sed, sel_crit, glf3)
-
-#Plot the observed QLF.
-lLfracs = np.arange(lL_frac_min, lL_frac_max+0.1*dlLfrac.value, dlLfrac.value)
-lLfracs2 = np.arange(lL_frac_min, lL_frac_max+0.1*dlLfrac2.value, dlLfrac2.value)
-lLfracs3 = np.arange(lL_frac_min, lL_frac_max+0.1*dlLfrac3.value, dlLfrac3.value)
-
-Lstar = 10.**(qlf.log_Lstar(z)) * qlf.Lstar_units
-nu_Lstarnu = qlf.L_at_lam(Lstar, lam_eff_filter/(1.+z))
-
-nu_rest = c/(lam_eff_filter/(1.+z))
-Lstar_nu = (nu_Lstarnu/nu_rest).to(u.erg/u.s/u.Hz).value
-
-norm = np.log10(nu_Lstarnu.to(u.erg/u.s).value)
-lLnu = lLfracs + norm
-lLnu2 = lLfracs2 + norm
-lLnu3 = lLfracs3 + norm
-
-lphi = np.log10(phi.value)
-lphi2 = np.log10(phi2.value)
-lphi3 = np.log10(phi3.value)
-
-#plt.plot(lLfracs, phi)
-#plt.plot(lLfracs2, phi2)
-#plt.yscale('log')
-#plt.ylim([1e-7, 1e-4])
-
-plt.plot(lLnu , lphi , label='Willmer06')
-plt.plot(lLnu2, lphi2, label='No host/selection')
-plt.plot(lLnu3, lphi3, label='Kollmeier06')
-#plt.xlim([39.56, 51.03])
-#plt.ylim([-17.3, -2.94])
-plt.xlim([40., 46.])
-plt.ylim([-7., -3.5])
-
+plt.plot(m_grid, Ntot1, label='Uniform')
+plt.plot(m_grid, Ntot2, label='Willmer06')
+plt.plot(m_grid, Ntot3, label='Kollmeier06')
+plt.yscale('log')
 plt.legend()
-plt.title('Predicted AGN Luminosity Functions')
-plt.xlabel(r'log Observed Luminosity in i-band ($\rm erg~\rm s^{-1})$')
-plt.ylabel(r'log Space Density ($\rm dex^{-1}~\rm cMpc^{-3})$')
+plt.savefig("Quasar_mag_counts.png", dpi=200)
 
-#plt.show()
-plt.savefig("Predicted_AGN_LF.R06.png")
+#Save the results.
+np.savetxt("Quasar_mag_counts.dat", np.array([m_grid, Ntot1, Ntot2, Ntot3]))
