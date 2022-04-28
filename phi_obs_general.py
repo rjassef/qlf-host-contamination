@@ -50,7 +50,7 @@ def get_phi_lam_obs(z, qlf, lLlam_obs_min, lLlam_obs_max, lam_eff_filter, agn_se
     #Estimate some useful quantities.
     #Lfrac = 10**lLfrac
     nu_rest = (c/(lam_eff_filter/(1.+z))).to(u.Hz)
-    L_nu    = (10**lLlam_obs_grid)/nu_rest
+    L_nu    = (10**lLlam_obs_grid)/nu_rest * qlf.Lstar_units
     L_nu_2D = np.tile(L_nu, [len(lNH), 1]).T
     #L_bol_AGN = Lfrac*Lstar
     L_bol_AGN = 10**(lLbol) * qlf.Lstar_units
