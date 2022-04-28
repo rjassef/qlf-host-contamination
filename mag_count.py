@@ -3,6 +3,7 @@ import astropy.units as u
 from astropy.constants import c, L_sun
 import matplotlib.pyplot as plt
 from astropy.cosmology import Planck15 as cosmo
+from scipy.interpolate import interp1d
 
 #from Phi_Obs_hostgal_MiLim import get_phi_lam_obs
 from phi_obs_general import get_phi_lam_obs
@@ -24,6 +25,13 @@ lam_eff_filter = 5000.*u.angstrom
 m_faint = 28.0
 m_bright = 15.0
 m_zp_jy = 3631.0*u.Jy
+
+#Set the observed magnitude grid.
+dmag = 0.5
+m_grid = np.arange(m_bright, m_faint+0.1*dmag, dmag)
+Ntot = np.zeros(m_grid.shape)
+#print(m_grid)
+#exit()
 
 #Set the band names.
 bp_names = ['sdssu', 'sdssg', 'sdssr']
@@ -61,6 +69,9 @@ for k, dz in enumerate(dzs):
     #Estimate the observed QLF.
     phi, dlLlam = get_phi_lam_obs(z, qlf, lLlam_obs_min, lLlam_obs_max, lam_eff_filter , agn_sed, hosts_sed, sel_crit, glf)
 
+    #print(phi.unit)
+    #exit()
+
     #Get the luminosity values.
     lLlam = np.arange(lLlam_obs_min, lLlam_obs_max+0.1*dlLlam.value, dlLlam.value)
 
@@ -73,11 +84,16 @@ for k, dz in enumerate(dzs):
     #Get the comoving volume element.
     Vc = cosmo.comoving_volume(zs[k+1])-cosmo.comoving_volume(zs[k])
 
+    #Interpolate in the histogram grid.
+    phi_interp = interp1d(mag, phi.value, fill_value='extrapolate')
+    Ntot += phi_interp(m_grid)*phi.unit * Vc * dmag
+
     #plt.plot(lLlam+np.log10(L_sun.to(u.erg/u.s).value), np.log10(phi.value))
-    plt.plot(mag, phi*Vc)
+    #plt.plot(mag, phi*Vc)
+    plt.plot(m_grid, Ntot)
     plt.yscale('log')
     #plt.ylim([10**(-7.), 10**(-3.5)])
-    plt.ylim([])
+    #plt.ylim([])
     plt.show()
 
 exit()
