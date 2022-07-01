@@ -26,7 +26,8 @@ dzs = zs[1:]-zs[:-1]
 
 #Set the observed wavelength at which to estimate the QLF.
 #lam_eff_filter = 7500.*u.angstrom
-lam_eff_filter = 5000.*u.angstrom
+#lam_eff_filter = 5000.*u.angstrom
+lam_eff_filter = 4750.*u.angstrom
 
 #Set the observed magnitude boundaries. 
 m_faint = 28.0
@@ -110,12 +111,26 @@ for k, z in enumerate(zuse):
     Ntot2 += (phi_interp2(m_grid)*phi2.unit * Vc * dmag * -1).to(1).value
     Ntot3 += (phi_interp3(m_grid)*phi3.unit * Vc * dmag * -1).to(1).value
 
-plt.plot(m_grid, Ntot1, label='Uniform')
-plt.plot(m_grid, Ntot2, label='Willmer06')
-plt.plot(m_grid, Ntot3, label='Kollmeier06')
+#plt.plot(m_grid, Ntot1, label='Uniform')
+#plt.plot(m_grid, Ntot2, label='Willmer06')
+#plt.plot(m_grid, Ntot3, label='Kollmeier06')
+plt.xlim([15, 28])
+plt.tick_params(top=True, right=True, grid_alpha=0.5)
+plt.grid()
+plt.plot(m_grid, Ntot1, label='Without Selection Function')
+plt.plot(m_grid, Ntot2, label='With Selection Function but no AGN-host Relation')
+plt.plot(m_grid, Ntot3, label='With Selection Function and AGN-host Relation')
 plt.yscale('log')
 plt.legend()
-plt.savefig("Quasar_mag_counts.png", dpi=200)
+plt.xlabel("g-band magnitude")
+plt.ylabel("Number counts")
+
+#Draw the nominal 5 sigma depth of the WFD. 
+plt.axvline(27.4, color='black', linestyle='dashed')
+yloc = 10**(np.mean(np.log10(plt.ylim()))-1.0)
+plt.text(27.0, yloc, r'WFD $5\sigma$ depth', rotation='vertical')
+
+plt.savefig("Quasar_mag_counts_g.png", dpi=200)
 
 #Save the results.
-np.savetxt("Quasar_mag_counts.dat", np.array([m_grid, Ntot1, Ntot2, Ntot3]))
+np.savetxt("Quasar_mag_counts_g.dat", np.array([m_grid, Ntot1, Ntot2, Ntot3]))
