@@ -4,7 +4,8 @@ import sys
 
 class SelectionCriteria(object):
 
-    def __init__(self):
+    def __init__(self, bp_names):
+        self.bp_names = bp_names
         return
 
     #def is_selected(self,Lhost_Lagn, Alam, lam_rest, agn_sed, hosts_sed, k_hosts_sed, Lhost_Lagn_unscaled):

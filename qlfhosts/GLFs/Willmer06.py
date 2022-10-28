@@ -6,10 +6,10 @@ from scipy.interpolate import interp1d
 #DEEP2 B-band galaxy luminosity function from Willmer et al. (2006)
 class Willmer06(SchechterFunction):
 
-    def __init__(self, z):
+    def __init__(self, **kargs):
 
         #Save the input redshift. 
-        self.z = z
+        self.z = kargs['z']
 
         #Same alpha at all redshifts.
         self.alpha  = -1.3
@@ -17,9 +17,9 @@ class Willmer06(SchechterFunction):
         #For Mstar we will interpolate. 
         z_table = np.array([0.30, 0.50, 0.70, 0.90, 1.10])
         MstarB_table = np.array([-21.07, -21.15, -21.51, -21.36, -21.54])
-        if z<=np.min(z_table):
+        if self.z<=np.min(z_table):
             self.MstarB = MstarB_table[0]
-        elif z>=np.max(z_table):
+        elif self.z>=np.max(z_table):
             self.MstarB = MstarB_table[-1]
         else:
             MstarB_func = interp1d(z_table, MstarB_table, kind='linear')

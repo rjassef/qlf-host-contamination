@@ -6,7 +6,7 @@ from scipy.special import erf
 
 class Kollmeier06(object):
 
-    def __init__(self):
+    def __init__(self,**kargs):
 
         self.mu = np.log10(0.25)
         self.sigma = 0.3

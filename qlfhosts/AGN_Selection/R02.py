@@ -6,7 +6,9 @@ from .selection_criteria_class import SelectionCriteria
 class R02(SelectionCriteria):
 
     def __init__(self):
-        super(R02,self).__init__()
+        #These are the bands we will need. The names need to match the filter curves in the bandpasses folder.
+        bp_names = ['sdssu', 'sdssg', 'sdssr']
+        super(R02,self).__init__(bp_names)
         return
 
     def is_agn(self, mag):
