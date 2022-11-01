@@ -6,7 +6,7 @@ from astropy.cosmology import Planck15 as cosmo
 from regex import P
 from scipy.interpolate import interp1d
 
-from qlfhosts.GLFs import Uniform, Willmer06, Kollmeier06
+from qlfhosts.GLFs import Uniform, Willmer06, Kollmeier06, Ananna22
 
 from qlfhosts.util.phiObs import PhiObs
 
@@ -30,6 +30,7 @@ glfs = [
     Uniform,
     Willmer06,
     Kollmeier06,
+    Ananna22,
 ]
 
 #Set the observed magnitude boundaries. 
@@ -82,6 +83,7 @@ plt.grid()
 plt.plot(m_grid, Ntot[0], label='Without Selection Function')
 plt.plot(m_grid, Ntot[1], label='With Selection Function but no AGN-host Relation')
 plt.plot(m_grid, Ntot[2], label='With Selection Function and AGN-host Relation')
+plt.plot(m_grid, Ntot[3], label='With Selection Function and AGN-host Relation 2')
 plt.yscale('log')
 plt.legend()
 plt.xlabel("g-band magnitude")
