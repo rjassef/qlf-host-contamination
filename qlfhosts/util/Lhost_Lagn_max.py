@@ -32,7 +32,7 @@ def Lhost_Lagn_max(agn_sed, hosts_sed, Alam, Aband_to_Alam, sel_crit, x_unscaled
         #Isolate only the mag_diff values needed.
         mag_diff = all_hosts_mag_diff[k]
 
-        #Check that xmin selects the source and that xmax does not. If this is not met, 
+        #Check that xmin selects the source and that xmax does not. If this is not met, print a warning. 
         if not sel_crit.is_selected(xlow, x_unscaled, agn_mags, mag_diff):
             if debug:
                 print("Object not selected as AGN at xlow. Returning xlow.")
