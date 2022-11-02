@@ -21,6 +21,12 @@ class Ananna22(AGNLeddBased):
         self.alpha = -1.576
         self.beta = 0.593
 
+        #Set the maximum observed L/Ledd allowed. From the discussion in Tsai et al. (2018), section 4.4, we take a value of 2.
+        self.max_log_lam_e = np.log10(2.)
+
+        #Set the minimum allowed L/Ledd. Based on Ho (2008), the AGN seems to go into ADAF mode at less than 1e-3. 
+        self.min_log_lam_e = -3.
+
         #Bounds for integration. Exceed the limits from the BASS sample, but better that way for not having issues.
         log_MBH1 = 5.
         log_MBH2 = 10.
@@ -36,6 +42,9 @@ class Ananna22(AGNLeddBased):
         precomp_P = np.zeros((len(log_Lbol), len(log_MBH)))
         for j, log_Lbol_use in enumerate(log_Lbol):
             norm = quad(self.func, log_MBH1, log_MBH2, args=(log_Lbol_use))[0]
+            #If the normalization is 0, it means we are mapping a very improbable/impossible part of the parameter space. In that case, skip it. 
+            if norm==0:
+                continue
             for i, log_MBH_max in enumerate(log_MBH):
                 precomp_P[j,i] = quad(self.func, log_MBH1, log_MBH_max, args=(log_Lbol_use))[0]/norm
         
@@ -62,7 +71,10 @@ class Ananna22(AGNLeddBased):
 
     def xi(self, log_lam_e):
         x = (log_lam_e-self.log_lam_e_star)
-        return 10.**(-self.delta_1 * x) / (1 + 10.**(self.eps_lam * x))
+        xi_use = 10.**(-self.delta_1 * x) / (1 + 10.**(self.eps_lam * x))
+        cond = (log_lam_e>=self.min_log_lam_e) & (log_lam_e<=self.max_log_lam_e)
+        xi_use = np.where(cond, xi_use, 0.)
+        return xi_use
 
     def phi(self, log_MBH):
         x = log_MBH - self.log_MBH_star
