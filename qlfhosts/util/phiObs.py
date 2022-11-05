@@ -53,7 +53,7 @@ class PhiObs(object):
 
         return
 
-    def get_phi_lam_obs(self, lLlam_obs_min, lLlam_obs_max, lam_eff_filter, lLfrac_min_lim=None):
+    def get_phi_lam_obs(self, lLlam_obs_min, lLlam_obs_max, lam_eff_filter, lLfrac_min_lim=None, lNH_min=20., lNH_max=26.):
 
         #Effective rest-frame wavelength of the filter.
         lam_eff_rest = lam_eff_filter/(1+self.z)
@@ -64,8 +64,8 @@ class PhiObs(object):
         #Get the obscuration. 
 
         #The next step is to convolve with the obscuration function. The issue here is that the observed luminosity in the band is a function of the intrinsic luminosity and the obscuration.
-        lNH_min = 20.
-        lNH_max = 26.
+        #lNH_min = 20.
+        #lNH_max = 26.
         dlNH    = 0.01
         lNH     = np.arange(lNH_min, lNH_max, dlNH)
 

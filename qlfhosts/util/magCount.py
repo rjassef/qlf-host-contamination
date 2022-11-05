@@ -27,7 +27,7 @@ class MagCount(object):
         return
 
 
-    def calc(self, zmin=0.3, zmax=6.7, nz=50,lam_eff_filter=4750.*u.angstrom, m_faint = 28.0, m_bright = 15.0, m_zp_jy = 3631.0*u.Jy, dmag=0.5*u.mag, Ncpu=None):
+    def calc(self, zmin=0.3, zmax=6.7, nz=50,lam_eff_filter=4750.*u.angstrom, m_faint = 28.0, m_bright = 15.0, m_zp_jy = 3631.0*u.Jy, dmag=0.5*u.mag, Ncpu=None, lNH_min=20., lNH_max=26.):
 
         #Set the redshift range and the number of logarithmically separated steps within which to count the number of AGN. 
         zs = np.logspace(np.log10(zmin), np.log10(zmax), nz)
@@ -47,7 +47,7 @@ class MagCount(object):
 
         k_all = np.arange(0,len(zuse),1)
         k_split = np.array_split(k_all,Ncpu)
-        func = partial(self.get_mag_count, m_grid, zuse, DLs, Vcs, m_faint, m_bright, dmag, m_zp_jy, lam_eff_filter)
+        func = partial(self.get_mag_count, m_grid, zuse, DLs, Vcs, m_faint, m_bright, dmag, m_zp_jy, lam_eff_filter, lNH_min, lNH_max)
         Output = Pool.map(func, k_split)
 
         Ntot = np.sum(Output, axis=0)
@@ -55,7 +55,7 @@ class MagCount(object):
         return Ntot, m_grid
 
 
-    def get_mag_count(self, m_grid, zuse, DLs, Vcs, m_faint, m_bright, dmag, m_zp_jy, lam_eff_filter, kuse):
+    def get_mag_count(self, m_grid, zuse, DLs, Vcs, m_faint, m_bright, dmag, m_zp_jy, lam_eff_filter, lNH_min, lNH_max, kuse):
 
         Ntot = np.zeros((m_grid.shape[0]))
 
@@ -75,7 +75,7 @@ class MagCount(object):
             lLlam_obs_min = lfact - 0.4*m_faint
             lLlam_obs_max = lfact - 0.4*m_bright       
 
-            phi, dlLlam = phi_obj.get_phi_lam_obs(lLlam_obs_min, lLlam_obs_max, lam_eff_filter)
+            phi, dlLlam = phi_obj.get_phi_lam_obs(lLlam_obs_min, lLlam_obs_max, lam_eff_filter, lNH_min=lNH_min, lNH_max=lNH_max)
 
             #Get the luminosity values.
             lLlam = np.arange(lLlam_obs_min, lLlam_obs_max+0.1*dlLlam.value, dlLlam.value)
