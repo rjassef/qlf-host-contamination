@@ -23,7 +23,7 @@ class HS_class(object):
             #The log of L_at_iband. 
             Fnu_i_lim = 3631.*u.Jy * 10**(-0.4*Mi_lim)
             L_i_lim = Fnu_i_lim * 4.*np.pi * (10.*u.pc)**2 * (c/(7500.*u.AA))
-            lL_i_lim = np.log10(L_i_lim)
+            lL_i_lim = np.log10(L_i_lim/self.Lstar_units)
             #Use the Lstar_at_lam and Lstar_at_i to convert into L_lam_lim.
             Lstar_i = self.L_at_lam(Lstar, 7500.*u.AA)
             lLlam_lim = lL_i_lim + np.log10(Lstar_lam/Lstar_i)

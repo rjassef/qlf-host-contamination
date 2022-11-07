@@ -8,7 +8,7 @@ from .Lhost_Lagn_max import Lhost_Lagn_max
 
 class PhiObs(object):
 
-    def __init__(self, z, QLF=None, Selection=None, AGN_SED=None, Host_SEDs=None, Host_SED_likelihood=None, Galaxy_Luminosity_Distribution=None, cosmo=None):
+    def __init__(self, z, QLF=None, Selection=None, AGN_SED=None, Host_SEDs=None, Host_SED_likelihood=None, Galaxy_Luminosity_Distribution=None, cosmo=None, Mi_lim=None):
 
         #Save all the function call arguments.
         save_args = locals()
@@ -51,6 +51,9 @@ class PhiObs(object):
             from ..GLFs.Uniform import Uniform as Galaxy_Luminosity_Distribution
         self.glf = Galaxy_Luminosity_Distribution(**save_args)
 
+        #Set the i-band Absolute Magnitude limit if requested.
+        self.Mi_lim = Mi_lim
+
         return
 
     def get_phi_lam_obs(self, lLlam_obs_min, lLlam_obs_max, lam_eff_filter, lLfrac_min_lim=None, lNH_min=20., lNH_max=26.):
@@ -59,7 +62,7 @@ class PhiObs(object):
         lam_eff_rest = lam_eff_filter/(1+self.z)
 
         #Get the reddening corrected luminosity function at the rest-frame wavelength mapped by the filter. 
-        phi_lam_sig, lLlam_sig, lLbol = self.qlf.get_phi_lam_no_red(self.z, lam_eff_rest)
+        phi_lam_sig, lLlam_sig, lLbol = self.qlf.get_phi_lam_no_red(self.z, lam_eff_rest, Mi_lim=self.Mi_lim)
 
         #Get the obscuration. 
 

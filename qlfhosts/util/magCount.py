@@ -14,7 +14,7 @@ from qlfhosts.util.phiObs import PhiObs
 
 class MagCount(object):
 
-    def __init__(self, QLF=None, Selection=None, AGN_SED=None, Host_SEDs=None, Host_SED_likelihood=None, Galaxy_Luminosity_Distribution=None, cosmo=None):
+    def __init__(self, QLF=None, Selection=None, AGN_SED=None, Host_SEDs=None, Host_SED_likelihood=None, Galaxy_Luminosity_Distribution=None, cosmo=None, Mi_lim=None):
 
         if cosmo is None:
             from astropy.cosmology import Planck15 as cosmo
