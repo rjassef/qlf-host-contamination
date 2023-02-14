@@ -18,16 +18,22 @@ class MagCount(object):
 
         if cosmo is None:
             from astropy.cosmology import Planck15 as cosmo
+        self.cosmo = cosmo
 
         self.PhiObs_args = locals()
         del(self.PhiObs_args['self'])
 
-        self.cosmo = cosmo
-
         return
 
 
-    def calc(self, zmin=0.3, zmax=6.7, nz=50,lam_eff_filter=4750.*u.angstrom, m_grid=None, m_faint = 28.0, m_bright = 15.0, m_zp_jy = 3631.0*u.Jy, dmag=0.5*u.mag, Ncpu=None, lNH_min=20., lNH_max=26.):
+    def calc(self, zmin=0.3, zmax=6.7, nz=50, m_grid=None, m_faint = 28.0, m_bright = 15.0, m_zp_jy = 3631.0*u.Jy, dmag=0.5*u.mag, Ncpu=None, lNH_min=20., lNH_max=26., band='LSSTg', lam_eff_filter=None):
+
+        #Set the effective wavelength of the observations.
+        if band is not None:
+            from .lam_eff import lam_eff
+            self.lam_eff_filter = lam_eff[band]
+        else:
+            self.lam_eff_filter = lam_eff_filter
 
         #Set the redshift range and the number of logarithmically separated steps within which to count the number of AGN. 
         zs = np.logspace(np.log10(zmin), np.log10(zmax), nz)
@@ -41,6 +47,10 @@ class MagCount(object):
         #Set the observed magnitude grid.
         if m_grid is None:
             m_grid = np.arange(m_bright, m_faint+0.1*dmag.value, dmag.value)
+        else:
+            m_bright = None
+            m_faint = None
+            dmag = None
 
         if Ncpu is None:
             Ncpu = mp.cpu_count()
@@ -48,7 +58,7 @@ class MagCount(object):
 
         k_all = np.arange(0,len(zuse),1)
         k_split = np.array_split(k_all,Ncpu)
-        func = partial(self.integrate_mag_count, m_grid, zuse, DLs, Vcs, m_zp_jy, lam_eff_filter, lNH_min, lNH_max)
+        func = partial(self.integrate_mag_count, m_grid, zuse, DLs, Vcs, m_zp_jy, lNH_min, lNH_max)
         Output = Pool.map(func, k_split)
 
         Ntot = np.sum(Output, axis=0)
@@ -56,7 +66,7 @@ class MagCount(object):
         return Ntot, m_grid
 
 
-    def integrate_mag_count(self, m_grid, zuse, DLs, Vcs, m_zp_jy, lam_eff_filter, lNH_min, lNH_max, kuse):
+    def integrate_mag_count(self, m_grid, zuse, DLs, Vcs, m_zp_jy, lNH_min, lNH_max, kuse):
 
         #The magnitude grid contains the minimum and maximum of each magnitude bin. But we want to evaluate at the mid point of each bin and then multiply by the width of bin. 
         m_grid_eval = 0.5*(m_grid[1:]+m_grid[:-1])
@@ -78,12 +88,12 @@ class MagCount(object):
 
             #Here we set the integration limits. The luminosity function is returned between pairs of lambda L_lambda luminosity values at the rest-frame lambda. The factor lfact just converts between magnitudes and lambda L_lambda.
             DL = DLs[k]
-            lfact = np.log10(m_zp_jy * 4*np.pi*DL**2 * c/lam_eff_filter / phi_obj.qlf.Lstar_units)
+            lfact = np.log10(m_zp_jy * 4*np.pi*DL**2 * c/self.lam_eff_filter / phi_obj.qlf.Lstar_units)
             lLlam_obs_min = lfact - 0.4*m_faint
             lLlam_obs_max = lfact - 0.4*m_bright       
 
             #Estimate the luminosity function. 
-            phi, dlLlam = phi_obj.get_phi_lam_obs(lLlam_obs_min, lLlam_obs_max, lam_eff_filter, lNH_min=lNH_min, lNH_max=lNH_max)
+            phi, dlLlam = phi_obj.get_phi_lam_obs(lLlam_obs_min, lLlam_obs_max, self.lam_eff_filter, lNH_min=lNH_min, lNH_max=lNH_max)
 
             #Get the corresponding observed magnitudes for the natural grid of the QLF. 
             dmag = 2.5*dlLlam.value
