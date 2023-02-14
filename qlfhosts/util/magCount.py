@@ -27,7 +27,7 @@ class MagCount(object):
         return
 
 
-    def calc(self, zmin=0.3, zmax=6.7, nz=50,lam_eff_filter=4750.*u.angstrom, m_faint = 28.0, m_bright = 15.0, m_zp_jy = 3631.0*u.Jy, dmag=0.5*u.mag, Ncpu=None, lNH_min=20., lNH_max=26.):
+    def calc(self, zmin=0.3, zmax=6.7, nz=50,lam_eff_filter=4750.*u.angstrom, m_grid=None, m_faint = 28.0, m_bright = 15.0, m_zp_jy = 3631.0*u.Jy, dmag=0.5*u.mag, Ncpu=None, lNH_min=20., lNH_max=26.):
 
         #Set the redshift range and the number of logarithmically separated steps within which to count the number of AGN. 
         zs = np.logspace(np.log10(zmin), np.log10(zmax), nz)
@@ -39,7 +39,8 @@ class MagCount(object):
         Vcs = self.cosmo.comoving_volume(zs[1:])-self.cosmo.comoving_volume(zs[:-1])
 
         #Set the observed magnitude grid.
-        m_grid = np.arange(m_bright, m_faint+0.1*dmag.value, dmag.value)
+        if m_grid is None:
+            m_grid = np.arange(m_bright, m_faint+0.1*dmag.value, dmag.value)
 
         if Ncpu is None:
             Ncpu = mp.cpu_count()
@@ -47,7 +48,7 @@ class MagCount(object):
 
         k_all = np.arange(0,len(zuse),1)
         k_split = np.array_split(k_all,Ncpu)
-        func = partial(self.get_mag_count, m_grid, zuse, DLs, Vcs, m_faint, m_bright, dmag, m_zp_jy, lam_eff_filter, lNH_min, lNH_max)
+        func = partial(self.integrate_mag_count, m_grid, zuse, DLs, Vcs, m_zp_jy, lam_eff_filter, lNH_min, lNH_max)
         Output = Pool.map(func, k_split)
 
         Ntot = np.sum(Output, axis=0)
@@ -55,9 +56,16 @@ class MagCount(object):
         return Ntot, m_grid
 
 
-    def get_mag_count(self, m_grid, zuse, DLs, Vcs, m_faint, m_bright, dmag, m_zp_jy, lam_eff_filter, lNH_min, lNH_max, kuse):
+    def integrate_mag_count(self, m_grid, zuse, DLs, Vcs, m_zp_jy, lam_eff_filter, lNH_min, lNH_max, kuse):
 
-        Ntot = np.zeros((m_grid.shape[0]))
+        #The magnitude grid contains the minimum and maximum of each magnitude bin. But we want to evaluate at the mid point of each bin and then multiply by the width of bin. 
+        m_grid_eval = 0.5*(m_grid[1:]+m_grid[:-1])
+        dmag_grid = (m_grid[1:]-m_grid[:-1])*u.mag
+        m_faint = np.max(m_grid)
+        m_bright = np.min(m_grid)
+
+        #The output array.
+        Ntot = np.zeros((m_grid_eval.shape[0]))
 
         #Iterate on redshift. 
         for k in kuse:
@@ -65,26 +73,22 @@ class MagCount(object):
             #Set the redshift to use.
             z = zuse[k]
          
-            #Estimate the observed QLF.
+            #Create the luminosity function object with the specific GLF to simulate host contamination. 
             phi_obj = PhiObs(z, **self.PhiObs_args)
 
-            #Set the luminosity integration limits.
+            #Here we set the integration limits. The luminosity function is returned between pairs of lambda L_lambda luminosity values at the rest-frame lambda. The factor lfact just converts between magnitudes and lambda L_lambda.
             DL = DLs[k]
-
             lfact = np.log10(m_zp_jy * 4*np.pi*DL**2 * c/lam_eff_filter / phi_obj.qlf.Lstar_units)
             lLlam_obs_min = lfact - 0.4*m_faint
             lLlam_obs_max = lfact - 0.4*m_bright       
 
+            #Estimate the luminosity function. 
             phi, dlLlam = phi_obj.get_phi_lam_obs(lLlam_obs_min, lLlam_obs_max, lam_eff_filter, lNH_min=lNH_min, lNH_max=lNH_max)
 
-            #Get the luminosity values.
-            lLlam = np.arange(lLlam_obs_min, lLlam_obs_max+0.1*dlLlam.value, dlLlam.value)
-
-            #Convert to observed magnitude. 
-            nu_rest = (c*(1+z)/lam_eff_filter)
-            Lnu = 10**lLlam * phi_obj.qlf.Lstar_units/nu_rest
-            Fnu = Lnu*(1+z)/(4*np.pi*DL**2)
-            mag = -2.5*np.log10(Fnu/m_zp_jy)
+            #Get the corresponding observed magnitudes for the natural grid of the QLF. 
+            dmag = 2.5*dlLlam.value
+            mag = np.arange(m_bright, m_faint+0.1*dmag, dmag)
+            mag = mag[::-1]
 
             #Get the comoving volume element.
             Vc = Vcs[k]
@@ -93,7 +97,7 @@ class MagCount(object):
             phi_interp1 = interp1d(mag, phi.value, fill_value='extrapolate')
 
             #We have to multiple by -1 since mag/dex = -2.5 within astropy.units. There is probably a more elegant wat to do this, but this works. 
-            Ntot += (phi_interp1(m_grid)*phi.unit * Vc * dmag * -1).to(1).value
+            Ntot += (phi_interp1(m_grid_eval)*phi.unit * Vc * dmag_grid * -1).to(1).value
 
         return Ntot
 
