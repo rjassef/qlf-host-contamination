@@ -63,6 +63,9 @@ class MagCount(object):
 
         Ntot = np.sum(Output, axis=0)
 
+        #Close the pool. This is important because otherwise resources remain taken and can run into a "Too many files open" error.
+        Pool.close()
+
         return Ntot, m_grid
 
 
